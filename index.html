@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Costal Web X Terminal Interface</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #e5e5e5;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    #terminal {
+      background-color: #2e2e2e;
+      border-radius: 8px;
+      padding: 20px;
+      width: 80%;
+      max-width: 800px;
+      height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .input-line, .output-line {
+      display: flex;
+      align-items: center;
+    }
+    .input-line:before {
+      content: "-$ ";
+      color: #00ff00;
+      padding-right: 10px;
+    }
+    .output-line {
+      color: #00ff00;
+    }
+    input {
+      background: none;
+      border: none;
+      outline: none;
+      color: #e5e5e5;
+      width: 100%;
+      font-size: 1em;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal"></div>
+  
+  <script>
+    // Terminal Simulation Variables
+    const terminal = document.getElementById('terminal');
+    let connected = false;
+    let serverName = '';
+    let serverHtml = '';
+
+    // Initial Message
+    addOutputLine('Welcome to Costal Web X Terminal Interface!');
+
+    // Function to add lines to the terminal
+    function addOutputLine(text, isError = false) {
+      const line = document.createElement('div');
+      line.classList.add('output-line');
+      line.textContent = isError ? `Error: ${text}` : text;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function addInputLine() {
+      const line = document.createElement('div');
+      line.classList.add('input-line');
+      
+      const input = document.createElement('input');
+      input.setAttribute('type', 'text');
+      input.setAttribute('spellcheck', 'false');
+      input.onkeypress = handleInput;
+      
+      line.appendChild(input);
+      terminal.appendChild(line);
+      input.focus();
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Handle Commands
+    function handleInput(event) {
+      if (event.key === 'Enter') {
+        const command = event.target.value.trim();
+        processCommand(command);
+        event.target.disabled = true;
+        addInputLine();
+      }
+    }
+
+    // Process Commands
+    function processCommand(command) {
+      // Connect Command
+      if (command === 'connect servers build') {
+        connected = true;
+        addOutputLine('Servers are Connected 🔗');
+      
+      // Build Command
+      } else if (command.startsWith('build name="')) {
+        if (connected) {
+          const nameMatch = command.match(/name="([^"]+)"/);
+          const htmlMatch = command.match(/index.html="([^"]+)"/);
+
+          if (nameMatch && htmlMatch) {
+            serverName = nameMatch[1];
+            serverHtml = htmlMatch[1];
+            addOutputLine(`Server is Builded at GHTP`);
+            addOutputLine(`Server URL: ghtp://${serverName}.local`);
+          } else {
+            addOutputLine('Invalid build command syntax. Use: build name="<server name>" index.html="<html code here>"', true);
+          }
+        } else {
+          addOutputLine('You must connect to the server first using "connect servers build"', true);
+        }
+
+      // Open Server Command
+      } else if (command === `ghtp://${serverName}.local`) {
+        if (serverName) {
+          openServerPage();
+        } else {
+          addOutputLine(`No server found at ghtp://${serverName}.local`, true);
+        }
+      
+      // Invalid Command
+      } else {
+        addOutputLine(`Unrecognized command: ${command}`, true);
+      }
+    }
+
+    // Open a new tab simulating the server page
+    function openServerPage() {
+      const newWindow = window.open('about:blank', '_blank');
+      if (newWindow) {
+        newWindow.document.write(serverHtml);
+        newWindow.document.close();
+      } else {
+        addOutputLine('Unable to open new window. Please check your popup settings.', true);
+      }
+    }
+
+    // Start with an input line
+    addInputLine();
+  </script>
+</body>
+  </html>
